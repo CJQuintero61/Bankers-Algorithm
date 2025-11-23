@@ -21,6 +21,7 @@ void print_need_matrix(int num_processes, int num_resource_types, int** need);
 void print_available_vector(int num_resource_types, int* available);
 void free_matrix(int num_resource_types, int** matrix);
 int** create_matrix(int num_processes, int num_resource_types);
+void check_state(int num_processes, int num_resource_types, int** alloc, int** need, int* available);
 
 int main(int argc, char *argv[]) {
     /*
@@ -87,6 +88,9 @@ int main(int argc, char *argv[]) {
     print_max_matrix(num_processes, num_resource_types, max);
     print_need_matrix(num_processes, num_resource_types, need);
     print_available_vector(num_resource_types, available);
+
+    // check state
+    check_state(num_processes, num_resource_types, alloc, need, available);
 
     // free the matricies and vector
     free_matrix(num_processes, alloc);                  // alloc matrix
@@ -193,7 +197,7 @@ void print_available_vector(int num_resource_types, int* available) {
     for(int i = 0; i < num_resource_types; i++) {
         printf("%d ", available[i]);
     }
-    printf("\n");
+    printf("\n\n");
 }
 
 
@@ -210,6 +214,7 @@ void free_matrix(int num_processes, int** matrix) {
     free(matrix);
 }
 
+
 int** create_matrix(int num_processes, int num_resource_types) {
     /*
         allocates and returns a 2D matrix
@@ -221,4 +226,82 @@ int** create_matrix(int num_processes, int num_resource_types) {
     }
 
     return matrix;
+}
+
+
+void check_state(int num_processes, int num_resource_types, int** alloc, int** need, int* available) {
+    /*
+        commutes if the system is in a safe state
+    */
+
+    int work[num_resource_types];
+    int finish[num_processes];
+    int can_satify = 1;
+    int found = 1;
+    int safe = 1;
+
+    // copy the available vector
+    for(int i = 0; i < num_resource_types; i++) {
+        work[i] = available[i];
+    }
+    
+    // set all processes to unfinished
+    for(int i = 0; i < num_processes; i++) {
+        finish[i] = 0;
+    }
+
+    while(found) {
+        // reset the flag
+        found = 0;
+
+        // check every process
+        for(int i = 0; i < num_processes; i++) {
+
+            // find an unfinished process
+            if(finish[i] == 0) {
+
+                // reset the check
+                can_satify = 1;
+
+                // check every resource type need
+                // if a need is > work, we cannot satisfy it
+                for(int j = 0; j < num_resource_types; j++) {
+                    if(need[i][j] > work[j]) {
+                        can_satify = 0;
+                        break;
+                    }
+                }
+
+                if(can_satify == 1) {
+                    // if it can be satisfied, add its 
+                    // resources to the pool
+                    for(int j = 0; j < num_resource_types; j++) {
+                        work[j] = work[j] + alloc[i][j];
+                    }
+
+                    // set the process to finished
+                    finish[i] = 1;
+                    // set the found flag to true
+                    found = 1;
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i < num_processes; i++) {
+        // check that all processes finished
+        // if not, set the state to 0 and break
+        if(finish[i] == 0) {
+            safe = 0;
+            break;
+        }
+    }
+
+    
+    if(safe) {
+        printf("The system is in a safe state.\n");
+    }
+    else {
+        printf("The system is NOT in a safe state.\n");
+    }
 }
