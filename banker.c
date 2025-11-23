@@ -20,6 +20,7 @@ void print_max_matrix(int num_processes, int num_resource_types, int** max);
 void print_need_matrix(int num_processes, int num_resource_types, int** need);
 void print_available_vector(int num_resource_types, int* available);
 void free_matrix(int num_resource_types, int** matrix);
+int** create_matrix(int num_processes, int num_resource_types);
 
 int main(int argc, char *argv[]) {
     /*
@@ -49,25 +50,10 @@ int main(int argc, char *argv[]) {
     // read the number of processes and resource types
     fscanf(file_pointer, "%d %d", &num_processes, &num_resource_types);
 
-    // create the allocation matrix
-    int** alloc = malloc(num_processes * sizeof(int*));
-    for (int i = 0; i < num_processes; i++) {
-        alloc[i] = malloc(num_resource_types * sizeof(int));
-    }
-
-    // create the max matrix
-    int** max = malloc(num_processes * sizeof(int*));
-    for(int i = 0; i < num_processes; i++) {
-        max[i] = malloc(num_resource_types * sizeof(int));
-    }
-
-    // create the need matrix
-    int** need = malloc(num_processes * sizeof(int*));
-    for(int i = 0; i < num_processes; i++) {
-        need[i] = malloc(num_resource_types * sizeof(int));
-    }
-
-    // create the available vector
+    // create the matricies and vectors
+    int** alloc = create_matrix(num_processes, num_resource_types);
+    int** max = create_matrix(num_processes, num_resource_types);
+    int** need = create_matrix(num_processes, num_resource_types);
     int* available = malloc(num_resource_types * sizeof(int));
 
     // read the allocation matrix 
@@ -101,7 +87,6 @@ int main(int argc, char *argv[]) {
     print_max_matrix(num_processes, num_resource_types, max);
     print_need_matrix(num_processes, num_resource_types, need);
     print_available_vector(num_resource_types, available);
-
 
     // free the matricies and vector
     free_matrix(num_processes, alloc);                  // alloc matrix
@@ -198,7 +183,7 @@ void print_available_vector(int num_resource_types, int* available) {
     */
     printf("Available Vector:\n");
     printf("   ");
-    
+
     // dynamically print the resource types
     for(int i = 0; i < num_resource_types; i++) {
         printf("%c ", 'A' + i);
@@ -223,4 +208,17 @@ void free_matrix(int num_processes, int** matrix) {
     }
     // free the array itself
     free(matrix);
+}
+
+int** create_matrix(int num_processes, int num_resource_types) {
+    /*
+        allocates and returns a 2D matrix
+    */
+    int** matrix;
+    matrix = malloc(num_processes * sizeof(int*));
+    for(int i = 0; i < num_processes; i++) {
+        matrix[i] = malloc(num_resource_types * sizeof(int));
+    }
+
+    return matrix;
 }
